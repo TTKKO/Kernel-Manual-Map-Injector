@@ -75,4 +75,24 @@ namespace utils
 		for (length = 0; *((UINT32*)(&((unsigned char*)funcaddress)[length])) != 0xCCCCCCCC; ++length);
 		return length;
 	}
+	inline HWND hwndout;
+	inline BOOL EnumWindowProcMy(HWND input, LPARAM lParam)
+	{
+	
+		DWORD lpdwProcessId;
+		GetWindowThreadProcessId(input, &lpdwProcessId);
+		if (lpdwProcessId == lParam)
+		{
+			hwndout = input;
+			return FALSE;
+		}
+		return true;
+	}
+	inline HWND get_hwnd_of_process_id(int target_process_id)
+	{
+		EnumWindows(EnumWindowProcMy, target_process_id);
+		return hwndout;
+	}
+	
+
 }

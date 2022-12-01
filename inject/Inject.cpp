@@ -98,7 +98,13 @@ bool Inject::inject_module_from_path_to_process_by_name(const wchar_t* module_pa
 		printf(xor_a("Target Process not found!\n"));
 		return false;
 	}
+
 	printf(xor_a("Target Process Id is : %i\n"), target_process_id);
+
+	auto target_process_hwnd = utils::get_hwnd_of_process_id(target_process_id); // HWND needed for hook
+	auto nt_dll = LoadLibraryA(xor_a("ntdll.dll"));
+	auto thread_id = GetWindowThreadProcessId(target_process_hwnd, 0); // also needed for hook
+
 
 	uintptr_t target_file = utils::read_file_by_name(module_path);
 
@@ -115,7 +121,7 @@ bool Inject::inject_module_from_path_to_process_by_name(const wchar_t* module_pa
 
 
 
-	Driver* driver = new Driver(xor_w(L"\\\\.\\drivername"), target_process_id);
+	Driver* driver = new Driver(xor_w(L"\\\\.\\SpecTimeGame"), target_process_id);
 	
 	uintptr_t target_process_base_address = driver->get_base_address(process_name);
 
@@ -167,11 +173,7 @@ bool Inject::inject_module_from_path_to_process_by_name(const wchar_t* module_pa
 	*(uintptr_t*)(localshellcodealloc + allocatedvalue_offset) = shellcode_value;
 
 	driver->write_memory(allocated_shellcode, localshellcodealloc, 0x1000);
-
-
-	auto HWND = FindWindowA("Notepad", 0);
-	auto thread_id = GetWindowThreadProcessId(HWND, 0);
-	auto nt_dll = LoadLibraryA(xor_a("ntdll.dll"));
+	
 	auto win_event_hook = SetWinEventHook(EVENT_MIN, EVENT_MAX, nt_dll, (WINEVENTPROC)allocated_shellcode, target_process_id, thread_id, WINEVENT_INCONTEXT);
 	printf("Hook created at : %p\nWaiting...", win_event_hook);
 	while (true)
