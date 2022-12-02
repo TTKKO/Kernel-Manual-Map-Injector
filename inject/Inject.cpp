@@ -121,7 +121,7 @@ bool Inject::inject_module_from_path_to_process_by_name(const wchar_t* module_pa
 
 
 
-	Driver* driver = new Driver(xor_w(L"\\\\.\\SpecTimeGame"), target_process_id);
+	Driver* driver = new Driver(xor_w(L"\\\\.\\drivernamehere"), target_process_id);
 	
 	uintptr_t target_process_base_address = driver->get_base_address(process_name);
 
@@ -156,8 +156,8 @@ bool Inject::inject_module_from_path_to_process_by_name(const wchar_t* module_pa
 	printf(xor_a("Allocated 0x%p at %p\n"), 0x1000, allocated_shellcode);
 
 
-	uintptr_t allocatedbase_offset = uintptr_t((uintptr_t)utils::find_pattern("\x68\x41\x25\x46\x58\x01\x00\x00", "xxxxxx??") - (uintptr_t)&shellcode); //scans the value 0x15846254168 in shellcode
-	uintptr_t allocatedvalue_offset = uintptr_t((uintptr_t)utils::find_pattern("\x53\x12\x84\x56\x48\x02\x00\x00", "xxxxxx??") - (uintptr_t)&shellcode); // scans the value 0x24856841253 in shellcode
+	uintptr_t allocatedbase_offset = uintptr_t((uintptr_t)utils::find_pattern(xor_a("\x68\x41\x25\x46\x58\x01\x00\x00"), xor_a("xxxxxx??")) - (uintptr_t)&shellcode); //scans the value 0x15846254168 in shellcode
+	uintptr_t allocatedvalue_offset = uintptr_t((uintptr_t)utils::find_pattern(xor_a("\x53\x12\x84\x56\x48\x02\x00\x00"), xor_a("xxxxxx??")) - (uintptr_t)&shellcode); // scans the value 0x24856841253 in shellcode
 	if (!allocatedbase_offset || !allocatedvalue_offset)
 	{
 		printf(xor_a("Check signatures !\n"));
@@ -175,7 +175,7 @@ bool Inject::inject_module_from_path_to_process_by_name(const wchar_t* module_pa
 	driver->write_memory(allocated_shellcode, localshellcodealloc, 0x1000);
 	
 	auto win_event_hook = SetWinEventHook(EVENT_MIN, EVENT_MAX, nt_dll, (WINEVENTPROC)allocated_shellcode, target_process_id, thread_id, WINEVENT_INCONTEXT);
-	printf("Hook created at : %p\nWaiting...", win_event_hook);
+	printf(xor_a("Hook created at : %p\nWaiting..."), win_event_hook);
 	while (true)
 	{
 		
